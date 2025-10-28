@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
         // Apply rounded corners to cards and buttons
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -280,8 +280,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              colorScheme.primaryContainer.withOpacity(0.3),
-              colorScheme.secondaryContainer.withOpacity(0.3),
+              colorScheme.primaryContainer.withValues(alpha: 0.3),
+              colorScheme.secondaryContainer.withValues(alpha: 0.3),
             ],
           ),
         ),
@@ -414,7 +414,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                                   Icons.inbox_outlined,
                                   size: 80,
                                   color: colorScheme.onSurfaceVariant
-                                      .withOpacity(0.5),
+                                      .withValues(alpha: 0.5),
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
@@ -434,7 +434,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                                       .bodyMedium
                                       ?.copyWith(
                                         color: colorScheme.onSurfaceVariant
-                                            .withOpacity(0.7),
+                                            .withValues(alpha: 0.7),
                                       ),
                                 ),
                               ],
@@ -478,7 +478,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                                               : null,
                                           color: isCompleted
                                               ? colorScheme.onSurfaceVariant
-                                                  .withOpacity(0.6)
+                                                  .withValues(alpha: 0.6)
                                               : null,
                                         ),
                                       ),
