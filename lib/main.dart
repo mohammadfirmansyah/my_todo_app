@@ -48,7 +48,7 @@ class Todo {
     return Todo(
       id: json['id'] as int,
       title: json['title'] as String,
-      completed: json['completed'] as bool,
+      completed: json["completed"] == true || json["completed"] == 1,
     );
   }
 
