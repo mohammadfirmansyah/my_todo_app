@@ -37,11 +37,7 @@ class Todo {
   final String title;
   final bool completed;
 
-  Todo({
-    required this.id,
-    required this.title,
-    required this.completed,
-  });
+  Todo({required this.id, required this.title, required this.completed});
 
   // Factory constructor to create Todo from JSON response
   factory Todo.fromJson(Map<String, dynamic> json) {
@@ -54,11 +50,7 @@ class Todo {
 
   // Convert Todo to JSON for API requests
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'completed': completed,
-    };
+    return {'id': id, 'title': title, 'completed': completed};
   }
 }
 
@@ -73,14 +65,16 @@ class TodoListScreen extends StatefulWidget {
 class _TodoListScreenState extends State<TodoListScreen> {
   // Server Configuration State
   bool _useLocalServer = false;
-  String _customServerUrl = 'https://todolist.220fii1j0spm.us-south.codeengine.appdomain.cloud';
-  final String _localServerUrl = 'http://localhost:3000';
+  String _customServerUrl =
+      'https://todolist.220fii1j0spm.us-south.codeengine.appdomain.cloud';
+  String _localServerUrl = 'http://localhost:3000';
   bool _showSettings = false;
 
   // Todo List State
   List<Todo> _todos = [];
   final TextEditingController _newTodoController = TextEditingController();
   final TextEditingController _customServerController = TextEditingController();
+  final TextEditingController _localServerController = TextEditingController();
 
   // Connection State
   io.Socket? _socket;
@@ -88,27 +82,27 @@ class _TodoListScreenState extends State<TodoListScreen> {
   bool _isLoading = true;
   String? _connectionError;
 
+  // Debounce timer for server URL changes
+  Timer? _debounce;
+
   // Debug Logs State
   final List<String> _debugLogs = [];
   bool _showDebug = false;
 
   // Derived values based on current configuration
-  String get _apiUrl => _useLocalServer
-      ? '$_localServerUrl/todos'
-      : '$_customServerUrl/todos';
+  String get _apiUrl =>
+      _useLocalServer ? '$_localServerUrl/todos' : '$_customServerUrl/todos';
 
-  String get _socketUrl => _useLocalServer
-      ? _localServerUrl
-      : _customServerUrl;
+  String get _socketUrl => _useLocalServer ? _localServerUrl : _customServerUrl;
 
-  String get _environmentName => _useLocalServer
-      ? 'Local Server'
-      : 'Remote Server';
+  String get _environmentName =>
+      _useLocalServer ? 'Local Server' : 'Remote Server';
 
   @override
   void initState() {
     super.initState();
     _customServerController.text = _customServerUrl;
+    _localServerController.text = _localServerUrl;
     _initializeConnection();
   }
 
@@ -116,10 +110,12 @@ class _TodoListScreenState extends State<TodoListScreen> {
   void dispose() {
     // Cleanup: disconnect socket and dispose controllers
     _addDebugLog('Cleaning up resources', 'system');
+    _debounce?.cancel();
     _socket?.disconnect();
     _socket?.dispose();
     _newTodoController.dispose();
     _customServerController.dispose();
+    _localServerController.dispose();
     super.dispose();
   }
 
@@ -154,7 +150,10 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
   // Initialize or reinitialize connection when server changes
   void _initializeConnection() {
-    _addDebugLog('Configuration changed - Server: ${_useLocalServer ? 'Local' : 'Remote'}', 'config');
+    _addDebugLog(
+      'Configuration changed - Server: ${_useLocalServer ? 'Local' : 'Remote'}',
+      'config',
+    );
     _addDebugLog('API URL: $_apiUrl', 'config');
     _addDebugLog('Socket URL: $_socketUrl', 'config');
 
@@ -198,10 +197,15 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
     // Listen for real-time todo updates from server
     _socket!.on('todos-updated', (data) {
-      _addDebugLog('Real-time update received: ${data?.length ?? 0} todos', 'socket');
+      _addDebugLog(
+        'Real-time update received: ${data?.length ?? 0} todos',
+        'socket',
+      );
       if (data != null && data is List) {
         setState(() {
-          _todos = data.map((json) => Todo.fromJson(json as Map<String, dynamic>)).toList();
+          _todos = data
+              .map((json) => Todo.fromJson(json as Map<String, dynamic>))
+              .toList();
         });
       }
     });
@@ -252,9 +256,9 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
       _addDebugLog('Fetching todos from: $_apiUrl', 'api');
 
-      final response = await http.get(
-        Uri.parse(_apiUrl),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(Uri.parse(_apiUrl))
+          .timeout(const Duration(seconds: 10));
 
       _addDebugLog('Fetch successful! Status: ${response.statusCode}', 'api');
 
@@ -286,7 +290,10 @@ class _TodoListScreenState extends State<TodoListScreen> {
       });
 
       if (mounted) {
-        _showErrorDialog('Connection Error', 'Unable to connect to API: $errorMessage');
+        _showErrorDialog(
+          'Connection Error',
+          'Unable to connect to API: $errorMessage',
+        );
       }
     } finally {
       setState(() {
@@ -315,7 +322,10 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = json.decode(response.body);
-        _addDebugLog('Todo added successfully! ID: ${responseData['id']}', 'api');
+        _addDebugLog(
+          'Todo added successfully! ID: ${responseData['id']}',
+          'api',
+        );
 
         // Clear input field after successful creation
         _newTodoController.clear();
@@ -360,10 +370,13 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
   // Toggle todo completion status via PUT request
   Future<void> _updateTodo(int id) async {
-    final todo = _todos.firstWhere((t) => t.id == id, orElse: () {
-      _addDebugLog('Update failed: Todo ID $id not found', 'error');
-      return Todo(id: -1, title: '', completed: false);
-    });
+    final todo = _todos.firstWhere(
+      (t) => t.id == id,
+      orElse: () {
+        _addDebugLog('Update failed: Todo ID $id not found', 'error');
+        return Todo(id: -1, title: '', completed: false);
+      },
+    );
 
     if (todo.id == -1) return;
 
@@ -434,503 +447,590 @@ class _TodoListScreenState extends State<TodoListScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header title
-                const Text(
-                  'To-Do List',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1976d2),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header title
+                  const Text(
+                    'To-Do List',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1976d2),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Settings toggle button
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _showSettings = !_showSettings;
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2196F3),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  // Settings toggle button
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _showSettings = !_showSettings;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2196F3),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      _showSettings ? '▼ Hide Settings' : '▶ Show Settings',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  child: Text(
-                    _showSettings ? '▼ Hide Settings' : '▶ Show Settings',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // Server Configuration Settings
-                if (_showSettings) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Server Configuration',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF333333),
+                  // Server Configuration Settings
+                  if (_showSettings) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Toggle between Local and Remote Server
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFf5f5f5),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                _useLocalServer ? '🏠 Local Server' : '☁️ Remote Server',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Switch(
-                                value: _useLocalServer,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _useLocalServer = value;
-                                  });
-                                  debugPrint('🔄 Switching to: ${value ? 'Local' : 'Remote'}');
-                                  _initializeConnection();
-                                },
-                                activeTrackColor: const Color(0xFF4caf50),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Custom Server URL Input (only for remote)
-                        if (!_useLocalServer) ...[
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           const Text(
-                            'Remote Server URL:',
+                            'Server Configuration',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF666666),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF333333),
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          TextField(
-                            controller: _customServerController,
-                            decoration: InputDecoration(
-                              hintText: 'https://your-server.com',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF2196F3),
-                                  width: 2,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF2196F3),
-                                  width: 2,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF1976d2),
-                                  width: 2,
-                                ),
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.all(12),
+                          const SizedBox(height: 16),
+
+                          // Toggle between Local and Remote Server
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
                             ),
-                            onChanged: (value) {
-                              _customServerUrl = value;
-                            },
-                            onSubmitted: (_) {
-                              _initializeConnection();
-                            },
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFf5f5f5),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _useLocalServer
+                                      ? '🏠 Local Server'
+                                      : '☁️ Remote Server',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Switch(
+                                  value: _useLocalServer,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _useLocalServer = value;
+                                    });
+                                    debugPrint(
+                                      '🔄 Switching to: ${value ? 'Local' : 'Remote'}',
+                                    );
+                                    _initializeConnection();
+                                  },
+                                  activeTrackColor: const Color(0xFF4caf50),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 12),
-                        ],
 
-                        // Local Server URL Display (read-only)
-                        if (_useLocalServer) ...[
-                          const Text(
-                            'Local Server URL:',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF666666),
+                          // Custom Server URL Input (only for remote)
+                          if (!_useLocalServer) ...[
+                            const Text(
+                              'Remote Server URL:',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF666666),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: _customServerController,
+                              decoration: InputDecoration(
+                                hintText: 'https://your-server.com',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF2196F3),
+                                    width: 2,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF2196F3),
+                                    width: 2,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF1976d2),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.all(12),
+                              ),
+                              onChanged: (value) {
+                                // Debounce reconnection to avoid excessive calls while typing
+                                if (_debounce?.isActive ?? false)
+                                  _debounce!.cancel();
+                                _debounce = Timer(
+                                  const Duration(milliseconds: 800),
+                                  () {
+                                    final trimmedValue = value.trim();
+                                    if (_customServerUrl != trimmedValue) {
+                                      setState(() {
+                                        _customServerUrl = trimmedValue;
+                                      });
+                                      _addDebugLog(
+                                        'Server URL changed via debounce, reconnecting...',
+                                        'config',
+                                      );
+                                      _initializeConnection();
+                                    }
+                                  },
+                                );
+                              },
+                              onSubmitted: (value) {
+                                // Reconnect immediately on submit
+                                if (_debounce?.isActive ?? false)
+                                  _debounce!.cancel();
+                                final trimmedValue = value.trim();
+                                if (_customServerUrl != trimmedValue) {
+                                  setState(() {
+                                    _customServerUrl = trimmedValue;
+                                  });
+                                  _addDebugLog(
+                                    'Server URL submitted, reconnecting...',
+                                    'config',
+                                  );
+                                  _initializeConnection();
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // Local Server URL Input
+                          if (_useLocalServer) ...[
+                            const Text(
+                              'Local Server URL:',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF666666),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: _localServerController,
+                              decoration: InputDecoration(
+                                hintText: 'http://localhost:3000',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF4caf50),
+                                    width: 2,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF4caf50),
+                                    width: 2,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF388e3c),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.all(12),
+                              ),
+                              onChanged: (value) {
+                                // Debounce reconnection
+                                if (_debounce?.isActive ?? false)
+                                  _debounce!.cancel();
+                                _debounce = Timer(
+                                  const Duration(milliseconds: 800),
+                                  () {
+                                    final trimmedValue = value.trim();
+                                    if (_localServerUrl != trimmedValue) {
+                                      setState(() {
+                                        _localServerUrl = trimmedValue;
+                                      });
+                                      _addDebugLog(
+                                        'Local server URL changed, reconnecting...',
+                                        'config',
+                                      );
+                                      _initializeConnection();
+                                    }
+                                  },
+                                );
+                              },
+                              onSubmitted: (value) {
+                                // Reconnect immediately on submit
+                                if (_debounce?.isActive ?? false)
+                                  _debounce!.cancel();
+                                final trimmedValue = value.trim();
+                                if (_localServerUrl != trimmedValue) {
+                                  setState(() {
+                                    _localServerUrl = trimmedValue;
+                                  });
+                                  _addDebugLog(
+                                    'Local server URL submitted, reconnecting...',
+                                    'config',
+                                  );
+                                  _initializeConnection();
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // Current Active URL
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFFe3f2fd),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0xFF4caf50),
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              _localServerUrl,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF4caf50),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-
-                        // Current Active URL
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFe3f2fd),
-                            borderRadius: BorderRadius.circular(8),
-                            border: const Border(
-                              left: BorderSide(
-                                color: Color(0xFF2196F3),
-                                width: 4,
-                              ),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'ACTIVE API',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFF666666),
-                                  fontWeight: FontWeight.bold,
+                              border: const Border(
+                                left: BorderSide(
+                                  color: Color(0xFF2196F3),
+                                  width: 4,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _apiUrl,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF1976d2),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-
-                // Connection status indicator
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: _isConnected
-                              ? const Color(0xFF4caf50)
-                              : const Color(0xFFf44336),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        '${_isConnected ? 'Connected' : 'Disconnected'} - $_environmentName',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF666666),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Debug Panel Toggle Button
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _showDebug = !_showDebug;
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFff9800),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    '${_showDebug ? '▼ Hide Debug Logs' : '▶ Show Debug Logs'} (${_debugLogs.length})',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Debug Logs Panel
-                if (_showDebug) ...[
-                  Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFdddddd)),
-                    ),
-                    child: Column(
-                      children: [
-                        // Debug header
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFe0e0e0),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(12),
-                              topRight: Radius.circular(12),
                             ),
-                            border: Border(
-                              bottom: BorderSide(color: Color(0xFFbdbdbd)),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                '🔍 Debug Logs (Last 50)',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _debugLogs.clear();
-                                  });
-                                  _addDebugLog('Debug logs cleared', 'system');
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFf44336),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: const Text(
-                                  'Clear',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'ACTIVE API',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 11,
+                                    color: Color(0xFF666666),
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Debug logs list (newest first)
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(10),
-                            reverse: false,
-                            itemCount: _debugLogs.reversed.length,
-                            itemBuilder: (context, index) {
-                              final log = _debugLogs.reversed.toList()[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 4),
-                                child: Text(
-                                  log,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontFamily: 'monospace',
-                                    color: _getLogColor(log),
-                                    height: 1.4,
+                                const SizedBox(height: 4),
+                                Text(
+                                  _apiUrl,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF1976d2),
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              );
-                            },
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-
-                // Show error message and retry button if connection fails
-                if (_connectionError != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFffebee),
-                      borderRadius: BorderRadius.circular(8),
-                      border: const Border(
-                        left: BorderSide(
-                          color: Color(0xFFf44336),
-                          width: 4,
-                        ),
+                        ],
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    const SizedBox(height: 12),
+                  ],
+
+                  // Connection status indicator
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
                       children: [
-                        Text(
-                          'Error: $_connectionError',
-                          style: const TextStyle(
-                            color: Color(0xFFc62828),
-                            fontSize: 13,
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: _isConnected
+                                ? const Color(0xFF4caf50)
+                                : const Color(0xFFf44336),
+                            shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: _fetchTodos,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFf44336),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                          ),
-                          child: const Text(
-                            'Retry Connection',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${_isConnected ? 'Connected' : 'Disconnected'} - $_environmentName',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF666666),
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
-                ],
 
-                // Loading indicator
-                if (_isLoading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Column(
-                      children: [
-                        CircularProgressIndicator(
-                          color: Color(0xFF2196F3),
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          'Loading todos...',
-                          style: TextStyle(
-                            color: Color(0xFF666666),
-                            fontSize: 14,
+                  // Debug Panel Toggle Button
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _showDebug = !_showDebug;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFff9800),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      '${_showDebug ? '▼ Hide Debug Logs' : '▶ Show Debug Logs'} (${_debugLogs.length})',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Debug Logs Panel
+                  if (_showDebug) ...[
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFdddddd)),
+                      ),
+                      child: Column(
+                        children: [
+                          // Debug header
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFe0e0e0),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                topRight: Radius.circular(12),
+                              ),
+                              border: Border(
+                                bottom: BorderSide(color: Color(0xFFbdbdbd)),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  '🔍 Debug Logs (Last 50)',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _debugLogs.clear();
+                                    });
+                                    _addDebugLog(
+                                      'Debug logs cleared',
+                                      'system',
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFf44336),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: const Text(
+                                    'Clear',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
+                          // Debug logs list (newest first)
+                          Expanded(
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(10),
+                              reverse: false,
+                              itemCount: _debugLogs.reversed.length,
+                              itemBuilder: (context, index) {
+                                final log = _debugLogs.reversed.toList()[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Text(
+                                    log,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontFamily: 'monospace',
+                                      color: _getLogColor(log),
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
+                  // Show error message and retry button if connection fails
+                  if (_connectionError != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFffebee),
+                        borderRadius: BorderRadius.circular(8),
+                        border: const Border(
+                          left: BorderSide(color: Color(0xFFf44336), width: 4),
                         ),
-                      ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Error: $_connectionError',
+                            style: const TextStyle(
+                              color: Color(0xFFc62828),
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: _fetchTodos,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFf44336),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                            child: const Text(
+                              'Retry Connection',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                  ],
 
-                // Input field for new todo
-                TextField(
-                  controller: _newTodoController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter new todo...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.all(12),
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                  onSubmitted: (_) => _addTodo(),
-                ),
-                const SizedBox(height: 12),
-
-                // Add button
-                ElevatedButton(
-                  onPressed: _addTodo,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Add To-Do',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Todo counter
-                Text(
-                  'Total Todos: ${_todos.length}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF999999),
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Todo list
-                Expanded(
-                  child: _todos.isEmpty && !_isLoading
-                      ? const Center(
-                          child: Text(
-                            'No todos yet. Add one above!',
+                  // Loading indicator
+                  if (_isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(color: Color(0xFF2196F3)),
+                          SizedBox(height: 12),
+                          Text(
+                            'Loading todos...',
                             style: TextStyle(
-                              color: Color(0xFF999999),
+                              color: Color(0xFF666666),
                               fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Input field for new todo
+                  TextField(
+                    controller: _newTodoController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter new todo...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(12),
+                    ),
+                    textCapitalization: TextCapitalization.sentences,
+                    onSubmitted: (_) => _addTodo(),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Add button
+                  ElevatedButton(
+                    onPressed: _addTodo,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Add To-Do',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Todo counter
+                  Text(
+                    'Total Todos: ${_todos.length}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF999999),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Todo list
+                  _todos.isEmpty && !_isLoading
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 48.0),
+                            child: Text(
+                              'No todos yet. Add one above!',
+                              style: TextStyle(
+                                color: Color(0xFF999999),
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                         )
                       : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const ClampingScrollPhysics(),
                           itemCount: _todos.length,
                           itemBuilder: (context, index) {
                             final todo = _todos[index];
@@ -976,7 +1076,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
                                         vertical: 6,
                                       ),
                                       minimumSize: Size.zero,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
                                     ),
                                     child: Text(
                                       todo.completed ? 'Unmark' : 'Complete',
@@ -994,7 +1095,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
                                         vertical: 6,
                                       ),
                                       minimumSize: Size.zero,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
                                     ),
                                     child: const Text(
                                       'Delete',
@@ -1006,8 +1108,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
                             );
                           },
                         ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
