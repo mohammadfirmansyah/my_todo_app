@@ -450,7 +450,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
                               itemCount: todos.length,
                               itemBuilder: (context, index) {
                                 final todo = todos[index];
-                                final isCompleted = todo['completed'] ?? false;
+                                // Convert API response (int or bool) to bool for Checkbox
+                                final isCompleted = todo['completed'] == true || todo['completed'] == 1;
 
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 12.0),
