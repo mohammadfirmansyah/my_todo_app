@@ -1,6 +1,6 @@
 # 📝 Flutter Todo App
 
-[![GitHub](https://img.shields.io/badge/GitHub-my__todo__app-blue?logo=github)](https://github.com/username/my_todo_app)
+[![GitHub](https://img.shields.io/badge/GitHub-my__todo__app-blue?logo=github)](https://github.com/mohammadfirmansyah/my_todo_app)
 [![Flutter](https://img.shields.io/badge/Flutter-3.9.2+-02569B?logo=flutter)](https://flutter.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -55,8 +55,9 @@ A modern, feature-rich Todo application built with Flutter and Material Design 3
 - **Flutter** - v3.9.2+ (Cross-platform UI framework)
 - **Dart** - v3.9.2+ (Programming language)
 - **Material Design 3** - Modern design system
-- **HTTP Package** - v0.13.3+ (REST API communication)
-- **Cupertino Icons** - iOS-style icons for cross-platform consistency
+- **HTTP Package** - v1.2.0+ (REST API communication)
+- **Socket.IO Client** - v2.0.3+1 (Real-time synchronization)
+- **Intl** - v0.19.0+ (Date and time formatting)
 
 ## 📂 Project Structure
 
@@ -96,7 +97,7 @@ Follow these steps to get your development environment running:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/username/my_todo_app.git
+   git clone https://github.com/mohammadfirmansyah/my_todo_app.git
    cd my_todo_app
    ```
 
@@ -240,7 +241,7 @@ This project is licensed under the MIT License. See the **[LICENSE](LICENSE)** f
 ## 👨‍💻 Developer
 
 - **Mohammad Firman Syah**
-- **Project Link:** [https://github.com/username/my_todo_app](https://github.com/username/my_todo_app)
+- **Project Link:** [https://github.com/mohammadfirmansyah/my_todo_app](https://github.com/mohammadfirmansyah/my_todo_app)
 
 ---
 
