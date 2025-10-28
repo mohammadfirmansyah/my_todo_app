@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="710" viewBox="0 0 400 710">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e3f2fd;"/>
+      <stop offset="100%" style="stop-color:#bbdefb;"/>
+    </linearGradient>
+    <style>
+      .bg { fill: url(#bg-gradient); }
+      .header-text { font-family: 'Segoe UI', sans-serif; font-size: 28px; font-weight: bold; fill: #1976d2; }
+      .btn { fill: #2196F3; rx: 8px; }
+      .btn-debug { fill: #ff9800; rx: 8px; }
+      .btn-text { font-family: 'Segoe UI', sans-serif; font-size: 14px; font-weight: bold; fill: #ffffff; }
+      .status-bar { fill: #ffffff; rx: 8px; }
+      .status-text { font-family: 'Segoe UI', sans-serif; font-size: 13px; fill: #666666; }
+      .status-dot-connected { fill: #4caf50; }
+      .input-field { fill: #ffffff; stroke: #bdbdbd; rx: 8px; }
+      .input-text { font-family: 'Segoe UI', sans-serif; font-size: 14px; fill: #80868b; }
+      .counter-text { font-family: 'Segoe UI', sans-serif; font-size: 12px; fill: #999999; font-style: italic; }
+      .todo-item { fill: #ffffff; rx: 12px; }
+      .todo-text { font-family: 'Segoe UI', sans-serif; font-size: 16px; fill: #333333; }
+      .todo-text-completed { text-decoration: line-through; fill: #999999; }
+      .checkbox-unchecked { fill: #ffffff; stroke: #757575; stroke-width: 2px; rx: 4px; }
+      .checkbox-checked { fill: #1a73e8; stroke: #1a73e8; stroke-width: 2px; rx: 4px; }
+      .checkmark { stroke: #ffffff; stroke-width: 2.5px; stroke-linecap: round; }
+      .link-text { font-family: 'Segoe UI', sans-serif; font-size: 14px; fill: #1976d2; }
+    </style>
+  </defs>
+
+  <!-- Main Background -->
+  <rect class="bg" width="400" height="710"/>
+
+  <g transform="translate(20, 20)">
+    <!-- Header -->
+    <text class="header-text" x="180" y="35" text-anchor="middle">To-Do List</text>
+    
+    <!-- Settings Button -->
+    <g transform="translate(0, 70)">
+      <rect class="btn" width="360" height="40"/>
+      <text class="btn-text" x="180" y="25" text-anchor="middle">▶ Show Settings</text>
+    </g>
+
+    <!-- Status Bar -->
+    <g transform="translate(0, 120)">
+      <rect class="status-bar" width="360" height="40"/>
+      <circle class="status-dot-connected" cx="25" cy="20" r="6"/>
+      <text class="status-text" x="45" y="25">Connected - Remote Server</text>
+    </g>
+
+    <!-- Debug Button -->
+    <g transform="translate(0, 170)">
+      <rect class="btn-debug" width="360" height="40"/>
+      <text class="btn-text" x="180" y="25" text-anchor="middle">▶ Show Debug Logs (5)</text>
+    </g>
+
+    <!-- Input Field -->
+    <g transform="translate(0, 225)">
+      <rect class="input-field" width="360" height="45"/>
+      <text class="input-text" x="15" y="28">Enter new todo...</text>
+    </g>
+
+    <!-- Add Button -->
+    <g transform="translate(0, 285)">
+      <rect class="btn" width="360" height="45"/>
+      <text class="btn-text" x="180" y="28" text-anchor="middle">Add To-Do</text>
+    </g>
+
+    <!-- Todo Counter -->
+    <text class="counter-text" x="5" y="350">Total Todos: 2</text>
+
+    <!-- Todo Item 1 (Completed) -->
+    <g transform="translate(0, 365)">
+      <rect class="todo-item" width="360" height="60" filter="url(#shadow)"/>
+      <text class="todo-text todo-text-completed" x="20" y="35">Complete Flutter tutorial</text>
+      <text class="link-text" x="280" y="35">Unmark</text>
+    </g>
+
+    <!-- Todo Item 2 (Active) -->
+    <g transform="translate(0, 435)">
+      <rect class="todo-item" width="360" height="60" filter="url(#shadow)"/>
+      <text class="todo-text" x="20" y="35">Build a great app</text>
+      <text class="link-text" x="270" y="35">Complete</text>
+    </g>
+  </g>
+  
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+      <feOffset dx="0" dy="2"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.1"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>
